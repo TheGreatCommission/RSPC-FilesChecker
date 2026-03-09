@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSPC ICT Inspection Checklist</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         :root {
             --primary: #2563eb;
@@ -148,6 +151,14 @@
             display: block; width: 100%; margin-top: 30px; transition: background 0.2s;
         }
         .btn-print:hover { background-color: #1d4ed8; }
+        
+        .branding {
+            text-align: center;
+            font-size: 0.8em;
+            color: #94a3b8;
+            margin-top: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
         @media (max-width: 768px) {
             body { padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -182,7 +193,7 @@
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="printableArea">
     <div class="header">
         <h2>2026 REGIONAL SCHOOLS PRESS CONFERENCE</h2>
         <h3>ICT LAPTOP INSPECTION AND SEALING CHECKLIST</h3>
@@ -312,18 +323,27 @@
         </div>
     </div>
 
-    <button id="saveBtn" class="btn-print no-print" onclick="handleSaveAndPrint()">Save to Database & Print Form</button>
+    <button id="saveBtn" class="btn-print no-print">Save, Upload & Print Form</button>
+
+    <div class="branding no-print">
+        System by AppGeroMetrics
+    </div>
 </div>
 
 <script>
     // ==========================================
-    // SUPABASE CONFIGURATION
+    // 1. SUPABASE CONFIGURATION
+    // Paste your exact Supabase URL and Anon Key inside the quotes
     // ==========================================
     const SUPABASE_URL = 'https://xowtrvhwkizmaxwqgjme.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvd3Rydmh3a2l6bWF4d3Fnam1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM4OTYsImV4cCI6MjA4ODU3OTg5Nn0.XsLT0L0z4OjRTOPPVQkIupGojrhDKVCuMlY9gjPwdNg';
-    
-    // Uncomment when you have your keys
-    // const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==========================================
+    // 2. GOOGLE APPS SCRIPT CONFIGURATION
+    // Paste your Google Apps Script Web App URL inside the quotes
+    // ==========================================
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPxWz-eDjXqKwlH0mA7mhSvTzK1-vXKJWVm4AosE8wEqyg1yQiHs4oWp3ckSegQG-0/exec';
 
     async function handleSaveAndPrint() {
         const btn = document.getElementById('saveBtn');
@@ -332,15 +352,8 @@
         
         const levelElement = document.querySelector('input[name="level"]:checked');
         const mediumElement = document.querySelector('input[name="medium"]:checked');
-        
-        // Gather ALL checked devices
         const deviceCheckboxes = document.querySelectorAll('input[name="deviceType"]:checked');
-        // Map over the NodeList to extract the values and join them with a comma
         const selectedDevices = Array.from(deviceCheckboxes).map(cb => cb.value).join(', ');
-
-        const level = levelElement ? levelElement.value : 'Not specified';
-        const medium = mediumElement ? mediumElement.value : 'Not specified';
-        const deviceType = selectedDevices ? selectedDevices : 'Not specified';
 
         if (!schoolName) {
             alert('Please enter the School Name before saving.');
@@ -349,43 +362,99 @@
         }
 
         btn.disabled = true;
-        btn.innerText = 'Saving...';
+        btn.innerText = 'Step 1: Saving to Supabase...';
 
+        // --- STEP 1: SAVE TO SUPABASE ---
         const inspectionData = {
             school_name: schoolName,
             division: division,
             category: 'Collaborative Desktop Publishing',
-            level: level,
-            medium: medium,
-            device_type: deviceType, // Now sends a string like "Laptop, Camera, USB"
+            level: levelElement ? levelElement.value : 'Not specified',
+            medium: mediumElement ? mediumElement.value : 'Not specified',
+            device_type: selectedDevices ? selectedDevices : 'Not specified',
             all_requirements_met: Array.from(document.querySelectorAll('.db-check')).every(cb => cb.checked)
         };
 
         try {
-            // Uncomment to perform actual insert once Supabase is connected
-            /*
-            const { data, error } = await supabase
-                .from('rspc_inspections')
-                .insert([inspectionData]);
+            const { error } = await supabaseClient.from('rspc_inspections').insert([inspectionData]);
             if (error) throw error;
-            */
-            
-            console.log("Data ready to save:", inspectionData);
+            console.log("Supabase save successful.");
+        } catch (error) {
+            console.error('Supabase Error:', error);
+            // Continues even if DB fails so the physical flow isn't interrupted
+        }
 
-            btn.innerText = 'Data Saved! Opening Print...';
-            setTimeout(() => {
-                window.print();
-                btn.disabled = false;
-                btn.innerText = 'Save to Database & Print Form';
-            }, 500);
+        // --- STEP 2: GENERATE PDF & UPLOAD TO DRIVE ---
+        btn.innerText = 'Step 2: Uploading PDF to Drive...';
+        try {
+            // Hide the 'no-print' elements temporarily so they don't appear in the Drive PDF
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Configure html2pdf
+            const element = document.getElementById('printableArea');
+            const safeSchoolName = schoolName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const fileName = `${safeSchoolName}_rspc_cdp_log.pdf`;
+
+            const opt = {
+                margin: 0.3,
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // Generate Base64 string of the PDF
+            const pdfBase64 = await html2pdf().set(opt).from(element).outputPdf('datauristring');
+
+            // Restore the hidden elements
+            noPrintElements.forEach(el => el.style.display = '');
+
+            // Send to Google Apps Script
+            const payload = {
+                fileName: fileName,
+                pdfBase64: pdfBase64
+            };
+
+            // THE FIX: Added mode: 'no-cors' to bypass strict browser policies
+            await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            });
+            console.log("Drive upload initiated.");
 
         } catch (error) {
-            console.error('Error saving:', error);
+            console.error('Drive Upload Error:', error);
+            document.querySelectorAll('.no-print').forEach(el => el.style.display = '');
+        }
+
+        // --- STEP 3: PRINT PHYSICAL COPY ---
+        btn.innerText = 'Process Complete! Opening Print...';
+        setTimeout(() => {
             window.print();
             btn.disabled = false;
-            btn.innerText = 'Save to Database & Print Form';
-        }
+            btn.innerText = 'Save, Upload & Print Form';
+        }, 500);
     }
+
+    // Attach click event to the button
+    document.getElementById('saveBtn').addEventListener('click', handleSaveAndPrint);
+
+    // --- STEP 4: AUTO-BLANK THE FORM AFTER PRINTING ---
+    window.onafterprint = function() {
+        const textInputs = document.querySelectorAll('input[type="text"]');
+        textInputs.forEach(input => input.value = '');
+
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+
+        const radios = document.querySelectorAll('input[type="radio"]');
+        radios.forEach(radio => radio.checked = false);
+
+        document.getElementById('schoolName').focus();
+    };
 </script>
 
 </body>
