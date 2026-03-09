@@ -3,201 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSPC Device Diagnostic | AppGeroMetrics</title>
+    <title>RSPC ICT Inspection Checklist</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #2563eb;
             --background: #f8fafc;
             --surface: #ffffff;
-            --text: #0f172a;
-            --border: #e2e8f0;
+            --text: #000000;
+            --border: #333333;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Times New Roman', Times, serif; /* Changed to look more like an official document */
             background-color: var(--background);
             color: var(--text);
-            line-height: 1.6;
+            line-height: 1.4;
             margin: 0;
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             background: var(--surface);
-            padding: 30px;
+            padding: 40px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         .header {
             text-align: center;
             border-bottom: 2px solid var(--border);
-            padding-bottom: 20px;
+            padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        .header h1 {
-            margin: 0;
-            color: var(--primary);
+        .header h2, .header h3 {
+            margin: 5px 0;
         }
-        .header p {
-            margin: 5px 0 0 0;
-            color: #64748b;
+        .header h2 { font-size: 1.2em; }
+        .header h3 { font-size: 1.1em; font-weight: bold; }
+        
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .info-label {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 100px;
+        }
+        .info-input {
+            flex-grow: 1;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            padding: 2px 5px;
+            font-family: inherit;
+            font-size: 1em;
+            background: transparent;
         }
         
-        /* Instructions Panel Styles */
-        .instructions {
-            background-color: #e0f2fe;
-            border: 1px solid #bae6fd;
-            border-radius: 6px;
-            margin-bottom: 25px;
-            padding: 10px 15px;
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
-        .instructions summary {
-            font-weight: 600;
-            color: #0369a1;
+        .radio-group label {
+            display: flex;
+            align-items: center;
             cursor: pointer;
-            list-style-type: '👉 ';
         }
-        .instructions summary:hover {
-            color: #0284c7;
-        }
-        .instructions-content {
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: #0f172a;
-            border-top: 1px dashed #bae6fd;
-            padding-top: 10px;
-        }
-        .instructions-content h4 { 
-            margin: 10px 0 5px 0; 
-            color: #0284c7; 
-        }
-        .instructions-content ul { 
-            margin: 0 0 10px 0; 
-            padding-left: 20px; 
-        }
-        .instructions-content kbd {
-            background-color: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            padding: 2px 4px;
-            font-size: 0.9em;
-            font-family: monospace;
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
+        .hardware-rules {
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
         }
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        .hardware-rules ul {
+            margin: 0; padding-left: 20px;
+            column-count: 2;
         }
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 5px;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f1f1;
             font-size: 0.9em;
         }
-        .form-group input, .form-group select {
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: inherit;
+        .check-col {
+            width: 80px;
+            text-align: center;
         }
-        .section-title {
-            background-color: #f1f5f9;
-            padding: 10px;
-            border-left: 4px solid var(--primary);
-            margin: 20px 0 10px 0;
-            font-weight: bold;
+        .check-col input[type="checkbox"] {
+            width: 16px; height: 16px;
         }
-        .checklist-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-        .checklist-item input[type="checkbox"] {
-            margin-top: 5px;
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-        }
-        .notes-area {
-            width: 100%;
-            height: 80px;
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: inherit;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        .footer {
-            margin-top: 40px;
+
+        .device-details {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            border: 1px solid var(--border);
+            padding: 15px;
+            margin-bottom: 30px;
         }
-        .signature-line {
-            border-top: 1px solid var(--text);
-            width: 250px;
-            text-align: center;
-            padding-top: 5px;
-            font-size: 0.9em;
-        }
-        .btn-print {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1em;
-            border-radius: 4px;
-            cursor: pointer;
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-            transition: background 0.2s;
-        }
-        .btn-print:hover {
-            background-color: #1d4ed8;
-        }
-        .branding {
-            text-align: center;
-            font-size: 0.8em;
-            color: #94a3b8;
-            margin-top: 30px;
-        }
+        .details-left { flex-grow: 1; padding-right: 20px; }
+        .details-right { width: 150px; border-left: 1px solid var(--border); padding-left: 15px; }
+        .serial-box { height: 80px; border: 1px solid #ccc; margin-top: 5px; }
 
-        /* Print Specific Styles */
+        .stub {
+            border-top: 2px dashed var(--border);
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        
+        .btn-print {
+            background-color: var(--primary); color: white; border: none; padding: 12px 20px;
+            font-size: 1.1em; font-weight: bold; border-radius: 4px; cursor: pointer;
+            display: block; width: 100%; margin-top: 30px; transition: background 0.2s;
+        }
+        .btn-print:hover { background-color: #1d4ed8; }
+        
         @media print {
-            body {
-                background-color: white;
-                padding: 0;
-            }
-            .container {
-                box-shadow: none;
-                padding: 0;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .form-group input, .form-group select, .notes-area {
-                border: none;
-                border-bottom: 1px solid #000;
-                border-radius: 0;
-                padding: 4px 0;
-                background: transparent;
-            }
-            select {
-                appearance: none;
-            }
-            .section-title {
-                background-color: transparent;
-                border-left: none;
-                border-bottom: 2px solid #000;
-                padding-left: 0;
-            }
+            body { background-color: white; padding: 0; font-size: 12pt; }
+            .container { box-shadow: none; padding: 0; }
+            .no-print { display: none !important; }
+            .info-input { border-bottom: 1px solid #000; }
+            /* Hide the actual radio buttons and fake checked ones for print if desired, but native usually prints fine */
         }
     </style>
 </head>
@@ -205,127 +149,217 @@
 
 <div class="container">
     <div class="header">
-        <h1>RSPC Device Diagnostic Record</h1>
-        <p>Official Inspection Log for Competition Integrity</p>
+        <h2>2026 REGIONAL SCHOOLS PRESS CONFERENCE</h2>
+        <h3>ICT LAPTOP INSPECTION AND SEALING CHECKLIST</h3>
     </div>
 
-    <details class="instructions no-print">
-        <summary>Click here for Step-by-Step Checking Instructions</summary>
-        <div class="instructions-content">
-            <h4>💻 How to Check Laptops</h4>
-            <ul>
-                <li><strong>Network:</strong> Check the system tray (bottom right) to ensure Wi-Fi and Bluetooth are disabled, or verify Airplane Mode is ON.</li>
-                <li><strong>Recent Files (Windows):</strong> Press <kbd>Win</kbd> + <kbd>E</kbd> to open File Explorer. Click on "Home" or "Quick Access" on the left sidebar to view recently opened files.</li>
-                <li><strong>Recent Files (Mac):</strong> Open Finder and click "Recents" on the left sidebar.</li>
-                <li><strong>Word Processor:</strong> Have the participant open MS Word or Pages. Ensure it boots to a default blank document and that no background apps (like Grammarly or browsers) are running.</li>
-            </ul>
-            <h4>💾 How to Check USB Drives</h4>
-            <ul>
-                <li><strong>Isolate:</strong> ALWAYS plug the participant's USB into <em>your</em> dedicated checking station laptop, never their own.</li>
-                <li><strong>Scan & View:</strong> Open File Explorer. Check the "View" tab and ensure "Show Hidden items" is ticked. Review the contents to ensure it is completely empty.</li>
-                <li><strong>Format (If Required):</strong> Ask for verbal consent first. Right-click the USB drive in File Explorer, select "Format...", ensure "Quick Format" is checked, and click "Start".</li>
-            </ul>
+    <div class="info-section">
+        <div class="info-row">
+            <span class="info-label">Category:</span>
+            <strong>COLLABORATIVE DESKTOP PUBLISHING</strong>
         </div>
-    </details>
+        
+        <div class="info-row" style="margin-top: 10px;">
+            <span class="info-label">School:</span>
+            <input type="text" id="schoolName" class="info-input" placeholder="Enter school name">
+        </div>
+        <div class="info-row">
+            <span class="info-label">Division:</span>
+            <input type="text" id="division" class="info-input" placeholder="Enter division">
+        </div>
 
-    <div class="form-grid">
-        <div class="form-group">
-            <label for="participantName">Participant Name</label>
-            <input type="text" id="participantName" placeholder="Juan Dela Cruz">
+        <div class="info-row" style="margin-top: 10px;">
+            <span class="info-label">Level:</span>
+            <div class="radio-group">
+                <label><input type="radio" name="level" value="Elementary"> Elementary</label>
+                <label><input type="radio" name="level" value="Secondary"> Secondary</label>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="schoolName">School / Division</label>
-            <input type="text" id="schoolName" placeholder="Enter school name">
+        <div class="info-row">
+            <span class="info-label">Medium:</span>
+            <div class="radio-group">
+                <label><input type="radio" name="medium" value="English"> English</label>
+                <label><input type="radio" name="medium" value="Filipino"> Filipino</label>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="category">Event Category</label>
-            <input type="text" id="category" placeholder="e.g. News Writing (English)">
-        </div>
-        <div class="form-group">
-            <label for="deviceType">Device Type</label>
-            <select id="deviceType">
-                <option value="Laptop & USB">Laptop & USB</option>
-                <option value="Laptop Only">Laptop Only</option>
-                <option value="USB Only">USB Only</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="macAddress">Device MAC Address / Serial (Optional)</label>
-            <input type="text" id="macAddress" placeholder="XX:XX:XX:XX:XX:XX">
+        
+        <div class="info-row" style="margin-top: 10px;">
+            <span class="info-label">Device Used:</span>
+            <div class="radio-group">
+                <label><input type="radio" name="deviceType" value="Laptop"> Laptop</label>
+                <label><input type="radio" name="deviceType" value="USB"> USB</label>
+                <label><input type="radio" name="deviceType" value="Tablet"> Tablet</label>
+                <label><input type="radio" name="deviceType" value="Drawing Tablet"> Drawing Tablet</label>
+            </div>
         </div>
     </div>
 
-    <div class="section-title">Laptop Inspection</div>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>No unauthorized peripherals attached (smartwatches, secondary storage, etc.).</span>
-    </label>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>Network capabilities (Wi-Fi and Bluetooth) are verified OFF or in Airplane Mode.</span>
-    </label>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>Desktop, "Quick Access", and "Recent Files" are clear of pre-written drafts or notes.</span>
-    </label>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>Word processor opens to a completely blank document (no templates/macros).</span>
-    </label>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>No background applications (Grammarly, browsers) are running.</span>
-    </label>
+    <div class="hardware-rules">
+        <strong>Hardware Limits & Reminders (Verify Present):</strong>
+        <ul>
+            <li>Max 4 laptops inspected/labeled</li>
+            <li>2 DSLR/digital cameras max</li>
+            <li>1 printer with scanner</li>
+            <li>1 card reader / 1 blank flash drive</li>
+            <li>Drawing tabs (no memory/processor)</li>
+            <li style="color: red; font-weight: bold;">No mobile phones allowed</li>
+            <li style="color: red; font-weight: bold;">Internet disabled on laptops</li>
+        </ul>
+    </div>
 
-    <div class="section-title">USB Flash Drive Inspection</div>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>USB scanned for malware/viruses on the dedicated checking machine.</span>
-    </label>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>Drive contents verified to be 100% empty (including hidden files).</span>
-    </label>
-    <label class="checklist-item">
-        <input type="checkbox">
-        <span>USB formatted (if files were present and verbal consent was given).</span>
-    </label>
+    <strong>I. SOFTWARE / APPLICATIONS ALLOWED (Put ✓ if present)</strong>
+    <table>
+        <tr>
+            <th>Application / File Type</th>
+            <th class="check-col">Check (✓)</th>
+        </tr>
+        <tr><td>Photoshop</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>Adobe InDesign</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>Microsoft Office</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>Microsoft Publisher (Elem)</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+    </table>
 
-    <div class="section-title">Clearance & Notes</div>
-    <textarea class="notes-area" id="notesArea" placeholder="Add any remarks, anomalies found, or actions taken here..."></textarea>
+    <strong>II. FILES / CONTENT THAT MUST BE DELETED OR REMOVED (Put ✓ after verification)</strong>
+    <table>
+        <tr>
+            <th>Item to be Removed</th>
+            <th class="check-col">Verified (✓)</th>
+        </tr>
+        <tr><td>All stored documents cleared</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>Pre-saved projects deleted</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>Recycle Bin emptied / Hidden Files</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>Pictures unrelated to contest removed</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>AI tools and AI-generated content removed</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+        <tr><td>OTG / Flash drive EMPTY / NEW</td><td class="check-col"><input type="checkbox" class="db-check"></td></tr>
+    </table>
 
-    <div class="footer">
-        <div>
-            <p><strong>Status:</strong> <span style="color: green; font-weight: bold;">CLEARED</span></p>
+    <strong>III. DEVICE DETAILS</strong>
+    <div class="device-details">
+        <div class="details-left">
+            <div class="info-row"><span class="info-label" style="width:160px;">Laptop SEAL Serial No.:</span><input type="text" class="info-input"></div>
+            <div class="info-row"><span class="info-label" style="width:250px;">Laptop SEAL Serial Nos. (if more than one):</span><input type="text" class="info-input"></div>
+            <div class="info-row"><span class="info-label" style="width:180px;">Checked by (ICT Personnel):</span><input type="text" class="info-input"></div>
+            <div class="info-row">
+                <span class="info-label" style="width:70px;">Signature:</span><input type="text" class="info-input" style="width:150px;">
+                <span class="info-label" style="width:40px; margin-left: 20px;">Date:</span><input type="text" class="info-input" style="width:100px;">
+                <span class="info-label" style="width:40px; margin-left: 20px;">Time:</span><input type="text" class="info-input">
+            </div>
         </div>
-        <div class="signature-line">
-            Inspector Signature over Printed Name
+        <div class="details-right">
+            <strong>Serial No:</strong>
+            <div class="serial-box"></div>
         </div>
     </div>
 
-    <button class="btn-print no-print" onclick="window.print()">Print / Save as PDF</button>
-
-    <div class="branding no-print">
-        System by AppGeroMetrics
+    <div class="stub">
+        <div style="display: flex; justify-content: space-between;">
+            <div style="flex-grow: 1; padding-right: 20px;">
+                <h3 style="text-align: center; margin-top: 0;">RSPC RECEIVING & CLAIM STUB</h3>
+                <p style="font-size: 0.9em; text-align: justify;">This acknowledges the receipt, inspection, and sealing of ___ laptop/s submitted in compliance with the official guidelines of the 2026 Regional Schools Press Conference (RSPC).</p>
+                
+                <div class="info-row"><span class="info-label" style="width:60px;">School:</span><input type="text" class="info-input"></div>
+                <div class="info-row"><span class="info-label" style="width:60px;">Division:</span><input type="text" class="info-input"></div>
+                <div class="info-row"><span class="info-label" style="width:60px;">Coach:</span><input type="text" class="info-input"></div>
+                
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;"><strong>Category: COLLABORATIVE DESKTOP PUBLISHING</strong></p>
+                
+                <div style="margin-top: 15px;">
+                    <span style="font-size: 0.9em;">Received and Sealed by:</span><br>
+                    <strong>Authorized RSPC Committee Representative</strong><br>
+                    <div class="info-row" style="margin-top: 10px;"><span class="info-label" style="width:120px;">Name & Signature:</span><input type="text" class="info-input"></div>
+                </div>
+            </div>
+            <div class="details-right">
+                <strong>Serial No:</strong>
+                <div class="serial-box"></div>
+            </div>
+        </div>
     </div>
+
+    <button id="saveBtn" class="btn-print no-print" onclick="handleSaveAndPrint()">Save to Database & Print Form</button>
 </div>
 
 <script>
-    // Event listener that fires immediately after the print dialog is closed
-    window.onafterprint = function() {
-        // Clear all text inputs
-        const textInputs = document.querySelectorAll('input[type="text"]');
-        textInputs.forEach(input => input.value = '');
-        
-        // Clear the textarea
-        document.getElementById('notesArea').value = '';
+    // ==========================================
+    // SUPABASE CONFIGURATION
+    // ==========================================
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+    
+    // Uncomment these to activate DB saving when keys are added
+    // const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Uncheck all checkboxes
+    async function handleSaveAndPrint() {
+        const btn = document.getElementById('saveBtn');
+        const schoolName = document.getElementById('schoolName').value.trim();
+        const division = document.getElementById('division').value.trim();
+        
+        // Get selected radio button values
+        const levelElement = document.querySelector('input[name="level"]:checked');
+        const mediumElement = document.querySelector('input[name="medium"]:checked');
+        const deviceTypeElement = document.querySelector('input[name="deviceType"]:checked');
+
+        const level = levelElement ? levelElement.value : 'Not specified';
+        const medium = mediumElement ? mediumElement.value : 'Not specified';
+        const deviceType = deviceTypeElement ? deviceTypeElement.value : 'Not specified';
+
+        if (!schoolName) {
+            alert('Please enter the School Name before saving.');
+            document.getElementById('schoolName').focus();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+
+        const inspectionData = {
+            school_name: schoolName,
+            division: division,
+            category: 'Collaborative Desktop Publishing',
+            level: level,
+            medium: medium,
+            device_type: deviceType,
+            // Calculate a simple boolean to see if all required checkboxes are ticked
+            all_requirements_met: Array.from(document.querySelectorAll('.db-check')).every(cb => cb.checked)
+        };
+
+        try {
+            // Uncomment to perform actual insert
+            /*
+            const { data, error } = await supabase
+                .from('rspc_inspections')
+                .insert([inspectionData]);
+            if (error) throw error;
+            */
+            
+            console.log("Data ready to save:", inspectionData);
+
+            btn.innerText = 'Data Saved! Opening Print...';
+            setTimeout(() => {
+                window.print();
+                btn.disabled = false;
+                btn.innerText = 'Save to Database & Print Form';
+            }, 500);
+
+        } catch (error) {
+            console.error('Error saving:', error);
+            window.print();
+            btn.disabled = false;
+            btn.innerText = 'Save to Database & Print Form';
+        }
+    }
+
+    // Clear main inputs after print
+    window.onafterprint = function() {
+        // Optional: you can choose not to clear if the checker needs to process multiple laptops for the same school
+        /*
+        document.getElementById('schoolName').value = '';
+        document.getElementById('division').value = '';
+        const radios = document.querySelectorAll('input[type="radio"]');
+        radios.forEach(r => r.checked = false);
         const checkboxes = document.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = false);
-
-        // Reset the dropdown to the first option
-        document.getElementById('deviceType').selectedIndex = 0;
+        */
     };
 </script>
 
