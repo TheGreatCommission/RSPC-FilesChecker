@@ -64,19 +64,20 @@
             background: transparent;
         }
         
-        .radio-group {
+        .selection-group {
             display: flex;
             gap: 15px;
             align-items: center;
-            flex-wrap: wrap; /* Allows wrapping on small screens */
+            flex-wrap: wrap; 
         }
-        .radio-group label {
+        .selection-group label {
             display: flex;
             align-items: center;
             cursor: pointer;
             padding: 5px 0;
         }
-        .radio-group input[type="radio"] {
+        .selection-group input[type="radio"],
+        .selection-group input[type="checkbox"] {
             margin-right: 5px;
             width: 16px;
             height: 16px;
@@ -148,68 +149,22 @@
         }
         .btn-print:hover { background-color: #1d4ed8; }
 
-        /* ==========================================
-           MOBILE RESPONSIVE STYLES
-           ========================================== */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Better readability on mobile screens */
-            }
-            .container {
-                padding: 20px 15px;
-            }
-            .info-row {
-                flex-direction: column;
-                align-items: flex-start;
-                margin-bottom: 12px;
-            }
-            .info-label {
-                margin-bottom: 5px;
-                width: 100% !important; /* Overrides inline widths */
-            }
-            .info-input {
-                width: 100% !important;
-                box-sizing: border-box;
-                padding: 8px 5px;
-                background-color: #f8fafc; /* Slight background for mobile tap areas */
-            }
-            .hardware-rules ul {
-                column-count: 1; /* Stack list items vertically */
-            }
-            .device-details {
-                flex-direction: column;
-                padding: 10px;
-            }
-            .details-left {
-                padding-right: 0;
-            }
-            .details-right {
-                width: 100%;
-                border-left: none;
-                border-top: 1px solid var(--border);
-                padding-left: 0;
-                margin-top: 15px;
-                padding-top: 15px;
-            }
-            .stub-flex {
-                flex-direction: column;
-            }
-            .stub-left {
-                padding-right: 0;
-            }
-            th, td {
-                padding: 10px 5px;
-                font-size: 0.9em;
-            }
-            .check-col {
-                width: 50px;
-            }
+            body { padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            .container { padding: 20px 15px; }
+            .info-row { flex-direction: column; align-items: flex-start; margin-bottom: 12px; }
+            .info-label { margin-bottom: 5px; width: 100% !important; }
+            .info-input { width: 100% !important; box-sizing: border-box; padding: 8px 5px; background-color: #f8fafc; }
+            .hardware-rules ul { column-count: 1; }
+            .device-details { flex-direction: column; padding: 10px; }
+            .details-left { padding-right: 0; }
+            .details-right { width: 100%; border-left: none; border-top: 1px solid var(--border); padding-left: 0; margin-top: 15px; padding-top: 15px; }
+            .stub-flex { flex-direction: column; }
+            .stub-left { padding-right: 0; }
+            th, td { padding: 10px 5px; font-size: 0.9em; }
+            .check-col { width: 50px; }
         }
         
-        /* ==========================================
-           PRINT STYLES (Keeps original desktop layout)
-           ========================================== */
         @media print {
             body { background-color: white; padding: 0; font-size: 12pt; font-family: 'Times New Roman', Times, serif; }
             .container { box-shadow: none; padding: 0; }
@@ -250,26 +205,27 @@
 
         <div class="info-row" style="margin-top: 10px;">
             <span class="info-label">Level:</span>
-            <div class="radio-group">
+            <div class="selection-group">
                 <label><input type="radio" name="level" value="Elementary"> Elementary</label>
                 <label><input type="radio" name="level" value="Secondary"> Secondary</label>
             </div>
         </div>
         <div class="info-row">
             <span class="info-label">Medium:</span>
-            <div class="radio-group">
+            <div class="selection-group">
                 <label><input type="radio" name="medium" value="English"> English</label>
                 <label><input type="radio" name="medium" value="Filipino"> Filipino</label>
             </div>
         </div>
         
         <div class="info-row" style="margin-top: 10px;">
-            <span class="info-label">Device Used:</span>
-            <div class="radio-group">
-                <label><input type="radio" name="deviceType" value="Laptop"> Laptop</label>
-                <label><input type="radio" name="deviceType" value="USB"> USB</label>
-                <label><input type="radio" name="deviceType" value="Tablet"> Tablet</label>
-                <label><input type="radio" name="deviceType" value="Drawing Tablet"> Drawing Tablet</label>
+            <span class="info-label">Devices Used:</span>
+            <div class="selection-group">
+                <label><input type="checkbox" name="deviceType" value="Laptop"> Laptop</label>
+                <label><input type="checkbox" name="deviceType" value="USB"> USB</label>
+                <label><input type="checkbox" name="deviceType" value="Tablet"> Tablet</label>
+                <label><input type="checkbox" name="deviceType" value="Drawing Tablet"> Drawing Tablet</label>
+                <label><input type="checkbox" name="deviceType" value="Camera"> Camera</label>
             </div>
         </div>
     </div>
@@ -366,6 +322,7 @@
     const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
     const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     
+    // Uncomment when you have your keys
     // const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function handleSaveAndPrint() {
@@ -375,11 +332,15 @@
         
         const levelElement = document.querySelector('input[name="level"]:checked');
         const mediumElement = document.querySelector('input[name="medium"]:checked');
-        const deviceTypeElement = document.querySelector('input[name="deviceType"]:checked');
+        
+        // Gather ALL checked devices
+        const deviceCheckboxes = document.querySelectorAll('input[name="deviceType"]:checked');
+        // Map over the NodeList to extract the values and join them with a comma
+        const selectedDevices = Array.from(deviceCheckboxes).map(cb => cb.value).join(', ');
 
         const level = levelElement ? levelElement.value : 'Not specified';
         const medium = mediumElement ? mediumElement.value : 'Not specified';
-        const deviceType = deviceTypeElement ? deviceTypeElement.value : 'Not specified';
+        const deviceType = selectedDevices ? selectedDevices : 'Not specified';
 
         if (!schoolName) {
             alert('Please enter the School Name before saving.');
@@ -396,11 +357,19 @@
             category: 'Collaborative Desktop Publishing',
             level: level,
             medium: medium,
-            device_type: deviceType,
+            device_type: deviceType, // Now sends a string like "Laptop, Camera, USB"
             all_requirements_met: Array.from(document.querySelectorAll('.db-check')).every(cb => cb.checked)
         };
 
         try {
+            // Uncomment to perform actual insert once Supabase is connected
+            /*
+            const { data, error } = await supabase
+                .from('rspc_inspections')
+                .insert([inspectionData]);
+            if (error) throw error;
+            */
+            
             console.log("Data ready to save:", inspectionData);
 
             btn.innerText = 'Data Saved! Opening Print...';
