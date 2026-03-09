@@ -283,7 +283,7 @@
     <strong>III. DEVICE DETAILS</strong>
     <div class="device-details">
         <div class="details-left">
-            <div class="info-row"><span class="info-label" style="width:160px;">Laptop SEAL Serial No.:</span><input type="text" class="info-input"></div>
+            <div class="info-row"><span class="info-label" style="width:160px;">Laptop SEAL Serial No.:</span><input type="text" id="sealSerialNumber" class="info-input"></div>
             <div class="info-row"><span class="info-label" style="width:250px;">Laptop SEAL Serial Nos. (if more than one):</span><input type="text" class="info-input"></div>
             <div class="info-row"><span class="info-label" style="width:180px;">Checked by (ICT Personnel):</span><input type="text" class="info-input"></div>
             <div class="info-row">
@@ -333,7 +333,6 @@
 <script>
     // ==========================================
     // 1. SUPABASE CONFIGURATION
-    // Paste your exact Supabase URL and Anon Key inside the quotes
     // ==========================================
     const SUPABASE_URL = 'https://xowtrvhwkizmaxwqgjme.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvd3Rydmh3a2l6bWF4d3Fnam1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM4OTYsImV4cCI6MjA4ODU3OTg5Nn0.XsLT0L0z4OjRTOPPVQkIupGojrhDKVCuMlY9gjPwdNg';
@@ -341,7 +340,6 @@
 
     // ==========================================
     // 2. GOOGLE APPS SCRIPT CONFIGURATION
-    // Paste your Google Apps Script Web App URL inside the quotes
     // ==========================================
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPxWz-eDjXqKwlH0mA7mhSvTzK1-vXKJWVm4AosE8wEqyg1yQiHs4oWp3ckSegQG-0/exec';
 
@@ -349,6 +347,7 @@
         const btn = document.getElementById('saveBtn');
         const schoolName = document.getElementById('schoolName').value.trim();
         const division = document.getElementById('division').value.trim();
+        const sealSerialNumber = document.getElementById('sealSerialNumber').value.trim();
         
         const levelElement = document.querySelector('input[name="level"]:checked');
         const mediumElement = document.querySelector('input[name="medium"]:checked');
@@ -365,6 +364,7 @@
         btn.innerText = 'Step 1: Saving to Supabase...';
 
         // --- STEP 1: SAVE TO SUPABASE ---
+        // Payload updated to include seal_serial_number
         const inspectionData = {
             school_name: schoolName,
             division: division,
@@ -372,6 +372,7 @@
             level: levelElement ? levelElement.value : 'Not specified',
             medium: mediumElement ? mediumElement.value : 'Not specified',
             device_type: selectedDevices ? selectedDevices : 'Not specified',
+            seal_serial_number: sealSerialNumber, 
             all_requirements_met: Array.from(document.querySelectorAll('.db-check')).every(cb => cb.checked)
         };
 
@@ -416,7 +417,6 @@
                 pdfBase64: pdfBase64
             };
 
-            // THE FIX: Added mode: 'no-cors' to bypass strict browser policies
             await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
